@@ -1,0 +1,109 @@
+<!--输入为消息-->
+ <Object inType="message" inName="msg.sdp.updateParams">
+    <!--通用过滤；condition="=、!=、>、>=、<、<=、IN、NOTIN、SUBSTR",默认"="(对比类型包括：INT32/INT64/DOUBLE/STRING/STRINGVECTOR/DATE
+	(格式参考预处理))；logicCompare="AND/OR",默认"AND"-->
+   <!--如果对比类型是STRINGVECTOR，右值支持配置格式"NDM,QDM,ODM"-->
+   <filter>
+   		<logicCompare name="And">
+		   	<logicCompare name="And">
+		   	    <element sourceName="sdsp_srvc_id" sourceType="string" condition="=" compareAgainst="string" compareVal="2001"/> 
+		   		<element sourceName="system_id" sourceType="string" condition="IN" compareAgainst="STRINGVECTOR" compareVal="NDM,QDM,ODM"/>
+		   	</logicCompare>  
+		   	<logicCompare name="OR">
+		   	    <element sourceName="sdsp_srvc_id" sourceType="string" condition="<" compareAgainst="string" compareVal="2002"/>
+		   		<element sourceName="system_id" sourceType="string" condition="IN" compareAgainst="STRINGVECTOR" compareVal="NDM,QDM,ODM"/>
+		   	</logicCompare>	
+	   	</logicCompare>
+   </filter>
+   
+   <!--值替换-->
+   <replace>
+		<element sourceName="crtr_tm" sourceType="string" ReplaceBy="FUNC" ReplaceVal="getCurrentTmst"/>
+		<element sourceName="crtr" sourceType="string" ReplaceBy="STRING" ReplaceVal="system" />
+   </replace> 
+   
+   <!--转换结构后入库-->
+   <destination  configType="STRUCTURECONVERT" destinationStructure="msg.sdp.updateParams.Body.param_cfg" >
+	   <filter>
+			<element sourceName="service_id" sourceType="string" condition="equal" compareAgainst="STRING" compareVal="2001001"/> 
+	   </filter>
+	     <replace>
+		<element sourceName="crtr_tm" sourceType="string" ReplaceBy="FUNC" ReplaceVal="getCurrentTmst"/>
+		<element sourceName="crtr" sourceType="string" ReplaceBy="STRING" ReplaceVal="system" />
+   </replace> 
+	   <!--如果目标和源目标相同则默认匹配-->
+	   <simpleMapping> 
+			<element sourceName="field1" sourceType="string" destinationName="field2" destinationType="string"/>
+	   </simpleMapping>
+	   <Load type="DB">
+			<element tableName="NDMDB.param_cfg" />
+	   </Load>
+   </destination>
+   
+   <!--转换结构后写文件-->   
+   <destination  configType="STRUCTURECONVERT" destinationStructure="msg.sdp.updateParams.Body.param_cfg" >
+	   <filter>
+			<element sourceName="service_id" sourceType="string" condition="equal" compareAgainst="STRING" compareVal="2001001"/> 
+	   </filter>
+	   <!--如果目标和源目标相同则默认匹配-->
+	   <simpleMapping>
+		  <element sourceName="msg.sdp.update.body.cfg_id" sourceType="string" destinationName="cfg_id" destinationType="string"/>
+	   </simpleMapping>
+	   <Load type="FILE">
+			<element TargetName="/msg/file1.txt" format="json"/> 
+	   </Load>
+   </destination>
+   
+   <!--转换结构后发送dsp消息--> 
+   <destination  configType="STRUCTURECONVERT" destinationStructure="msg.sdp.updateParams.Body.param_cfg" >
+	   <filter>
+			<element sourceName="service_id" sourceType="string" condition="equal" compareAgainst="STRING" compareVal="2001001"/> 
+	   </filter>
+	   <!--如果目标和源目标相同则默认匹配-->
+	   <simpleMapping> 
+		  <element sourceName="msg.sdp.update.body.cfg_id" sourceType="string" destinationName="cfg_id" destinationType="string"/>
+	   </simpleMapping>
+	   <Load type="DSP">
+			<element sessionName="TO_ANOTHER_APICOMPONENT" sessionMode="PUSH"/>
+	   </Load>
+   </destination>
+   
+   <!--转换结构后发送dep消息--> 
+   <destination  configType="STRUCTURECONVERT" destinationStructure="msg.sdp.updateParams.Body.param_cfg" >
+	   <filter>
+			<element sourceName="service_id" sourceType="string" condition="equal" compareAgainst="STRING" compareVal="2001001"/> 
+	   </filter>
+	   <!--如果目标和源目标相同则默认匹配-->
+	   <simpleMapping> 
+		  <element sourceName="msg.sdp.update.body.cfg_id" sourceType="string" destinationName="cfg_id" destinationType="string"/>
+	   </simpleMapping>
+	   <Load type="DEP">
+			<element sessionName="TO_NDM_APICOMPONENT" sessionMode="PUBLISH"/>
+	   </Load>
+   </destination>
+   
+   <!--转换结构后发送MQ--> 
+   <destination  configType="STRUCTURECONVERT" destinationStructure="msg.sdp.updateParams.Body.param_cfg" > 
+	   <filter>
+			<element sourceName="service_id" sourceType="string" condition="equal" compareAgainst="STRING" compareVal="2001001"/> 
+	   </filter>
+	   <!--如果目标和源目标相同则默认匹配-->
+	   <simpleMapping>
+		  <element sourceName="msg.sdp.update.body.cfg_id" sourceType="string" destinationName="cfg_id" destinationType="string"/>
+	   </simpleMapping>
+	   <Load type="MQ">
+			<element queueName="TO_NDM_APICOMPONENT" queueManager="testQM1"/> 
+	   </Load>
+   </destination>
+   
+   <!--用户自定义处理逻辑--> 
+   <destination  destinationType="USERDEFINED" name="function1" >
+   <filter>
+		<element sourceName="service_id" sourceType="string" condition="equal" compareAgainst="STRING" compareVal="2001001"/> 
+   </filter>
+   </destination>
+   
+ </Object>
+
+  
+ 
